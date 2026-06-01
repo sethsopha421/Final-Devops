@@ -1,51 +1,32 @@
-version: '3.8'
-
 services:
-    nginx:
-        image: nginx:latest
-        container_name: nginx_server
-        ports:
-            - "8080:80"
-        volumes:
-            - ./nginx/conf.d:/etc/nginx/conf.d
-            - ./app:/var/www/html
-        depends_on:
-            - php
-            - mysql
-        networks:
-            - app-network
+  app:
+    image: your-dockerhub-username/final-devops:latest
+    container_name: devops_app
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    restart: always
 
-    php:
-        build: .
-        container_name: php_server
-        volumes:
-            - ./app:/var/www/html
-        depends_on:
-            - mysql
-        networks:
-            - app-network
+  db:
+    image: mysql:8.0
+    container_name: devops_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: devops_db
+      MYSQL_USER: devops
+      MYSQL_PASSWORD: devops123
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
 
-    mysql:
-        image: mysql:8.0
-        container_name: mysql_server
-        restart: always
-        environment:
-            MYSQL_ROOT_PASSWORD: rootpassword
-            MYSQL_DATABASE: mydatabase
-            MYSQL_USER: myuser
-            MYSQL_PASSWORD: mypassword
-        ports:
-            - "3307:3306"
-        volumes:
-            - mysql_data:/var/lib/mysql
-            - ./mydatabase.sql:/docker-entrypoint-initdb.d/mydatabase.sql
-
-        networks:
-            - app-network
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 devops_app
+    restart: always
 
 volumes:
-    mysql_data:
-
-networks:
-    app-network:
-        driver: bridge
+  db_data:
