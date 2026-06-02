@@ -4,30 +4,47 @@ services:
   mysql_server:
     image: mysql:8.0
     container_name: mysql_server
+    restart: always
+
     ports:
       - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mydatabase.sql:/docker-entrypoint-initdb.d/mydatabase.sql
+
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: mydatabase
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mydatabase.sql:/docker-entrypoint-initdb.d/mydatabase.sql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
     networks:
       - app-network
 
   app:
     build: .
     container_name: web_app
+    restart: always
+
     ports:
       - "3000:3000"
+
     depends_on:
-      - mysql_server
+      mysql_server:
+        condition: service_healthy
+
     environment:
       DB_HOST: mysql_server
       DB_PORT: 3306
       DB_USER: root
       DB_PASSWORD: rootpassword
       DB_NAME: mydatabase
+
     networks:
       - app-network
 
