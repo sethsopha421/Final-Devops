@@ -1,32 +1,39 @@
+version: '3.8'
+
 services:
-  app:
-    image: your-dockerhub-username/final-devops:latest
-    container_name: devops_app
-    ports:
-      - "80:80"
-    depends_on:
-      - db
-    restart: always
-
-  db:
+  mysql_server:
     image: mysql:8.0
-    container_name: devops_db
+    container_name: mysql_server
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mydatabase.sql:/docker-entrypoint-initdb.d/mydatabase.sql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: devops_db
-      MYSQL_USER: devops
-      MYSQL_PASSWORD: devops123
-    volumes:
-      - db_data:/var/lib/mysql
-    restart: always
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+    networks:
+      - app-network
 
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 30 devops_app
-    restart: always
+  app:
+    build: .
+    container_name: web_app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql_server
+    environment:
+      DB_HOST: mysql_server
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: mydatabase
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
-  db_data:
+  mysql_data:
