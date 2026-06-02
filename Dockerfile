@@ -1,7 +1,13 @@
-FROM php:8.2-apache
+FROM node:20
 
-RUN docker-php-ext-install pdo pdo_mysql
+WORKDIR /app
 
-COPY app/DevOps/ /var/www/html/
+COPY package*.json ./
 
-EXPOSE 80
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
