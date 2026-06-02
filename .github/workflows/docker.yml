@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write        # ← ADDED: needed to push images
+      packages: write
 
     steps:
       - name: Checkout Repository
@@ -37,3 +37,6 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
